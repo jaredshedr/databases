@@ -36,7 +36,6 @@ describe('Persistent Node Chat Server', () => {
     // Create a user on the chat server database.
     axios.post(`${API_URL}/users`, { username })
     .then(() => {
-        console.log('posted username');
         // Post a message to the node chat server:
         return axios.post(`${API_URL}/messages`, { username, message, roomname });
       })
@@ -67,7 +66,7 @@ describe('Persistent Node Chat Server', () => {
 
   it('Should output all messages from the DB', (done) => {
     // Let's insert a message into the db
-     const username = 'Valjean';
+      const username = 'Valjean';
       const message = 'test';
       const roomname = 'Hello';
       const queryString = 'INSERT INTO messages (message, roomname_id, username_id) values(?, (SELECT roomname_id FROM roomname WHERE roomname = ?), (SELECT username_id FROM username WHERE username = ?))';
@@ -84,12 +83,46 @@ describe('Persistent Node Chat Server', () => {
         .then((response) => {
           const messageLog = response.data;
           expect(messageLog[1].message).toEqual(message);
-          expect(typeof messageLog[1].roomname_id).toEqual(typeof 1);
+          expect(messageLog[1].roomname_id).toEqual(1);
           done();
         })
         .catch((err) => {
           throw err;
         });
     });
+  });
+
+  it('Should correctly link foreign keys in the DB', (done) => {
+    const username = 'Valjean';
+    const message = 'this is a new message';
+    const roomname = 'rooms and stuff';
+
+    dbConnection.query(`INSERT IGNORE INTO roomname(roomname) VALUES(?)`, [roomname], (err) => {
+      if (err) {
+        throw err;
+      }
+    })
+
+    const queryString = 'INSERT INTO messages (message, roomname_id, username_id) values(?, (SELECT roomname_id FROM roomname WHERE roomname = ?), (SELECT username_id FROM username WHERE username = ?))';
+    const queryArgs = [message, roomname, username];
+
+    dbConnection.query(queryString, queryArgs, (err) => {
+      if (err) {
+        throw err;
+      }
+
+      axios.get(`${API_URL}/messages`)
+        .then((response) => {
+          const messageLog = response.data;
+          expect(messageLog[2].message).toEqual(message);
+          expect(messageLog[2].roomname_id).toEqual(2);
+          expect(messageLog[1].username_id).toEqual(1);
+          done();
+        })
+        .catch((err) => {
+          throw err;
+        });
+    });
+
   });
 });
