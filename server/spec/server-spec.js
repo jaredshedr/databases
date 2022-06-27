@@ -69,7 +69,7 @@ describe('Persistent Node Chat Server', () => {
       const username = 'Valjean';
       const message = 'test';
       const roomname = 'Hello';
-      const queryString = 'INSERT INTO messages (message, roomname_id, username_id) values(?, (SELECT roomname_id FROM roomname WHERE roomname = ?), (SELECT username_id FROM username WHERE username = ?))';
+      const queryString = 'INSERT INTO messages (message, roomname_id, username_id) values(?, (SELECT roomname_id FROM roomnames WHERE roomname = ?), (SELECT username_id FROM usernames WHERE username = ?))';
       const queryArgs = [message, roomname, username];
     /* TODO: The exact query string and query args to use here
      * depend on the schema you design, so I'll leave them up to you. */
@@ -97,13 +97,13 @@ describe('Persistent Node Chat Server', () => {
     const message = 'this is a new message';
     const roomname = 'rooms and stuff';
 
-    dbConnection.query(`INSERT IGNORE INTO roomname(roomname) VALUES(?)`, [roomname], (err) => {
+    dbConnection.query(`INSERT IGNORE INTO roomnames(roomname) VALUES(?)`, [roomname], (err) => {
       if (err) {
         throw err;
       }
     })
 
-    const queryString = 'INSERT INTO messages (message, roomname_id, username_id) values(?, (SELECT roomname_id FROM roomname WHERE roomname = ?), (SELECT username_id FROM username WHERE username = ?))';
+    const queryString = 'INSERT INTO messages (message, roomname_id, username_id) values(?, (SELECT roomname_id FROM roomnames WHERE roomname = ?), (SELECT username_id FROM usernames WHERE username = ?))';
     const queryArgs = [message, roomname, username];
 
     dbConnection.query(queryString, queryArgs, (err) => {
